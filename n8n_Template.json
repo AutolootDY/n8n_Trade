@@ -1,0 +1,447 @@
+{
+  "name": "My workflow 7",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  // ดึงข้อความยาวจาก field output\n  const text = item.json.output;\n  // หาคำว่า LONG, SHORT หรือ HOLD จากข้อความ\n  const m = text.match(/\\b(LONG|SELL|HOLD)\\b/);\n  const signal = m ? m[1] : \"HOLD\";\n  // คืนค่าออกมาเป็นตัวแปรจริง\n  return {\n    json: {\n      ...item.json,\n      signal,\n    },\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        400
+      ],
+      "id": "2209037a-5eca-4509-871f-abc2cfa0e33d",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ohlc",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1300,
+        580
+      ],
+      "id": "f813a8e1-59d5-442b-9afa-b50b39dc1fbf",
+      "name": "Webhook",
+      "webhookId": "f6033988-36d7-4c90-8ae8-d70d732a0838"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b4e47640-9ccb-4d14-88a7-243e4bcf568a",
+              "name": "session_id",
+              "value": "={{ $json[\"symbol\"] + \"_\" + $now.format('YYYYMMDDHHmm') }}\n",
+              "type": "string"
+            },
+            {
+              "id": "573f0f0c-57c7-4a32-b914-a8d8749f5a19",
+              "name": "symbol",
+              "value": "={{ $json.body.symbol }}",
+              "type": "string"
+            },
+            {
+              "id": "9ef6a672-b2e5-4a61-a2fa-ce6f1b6d107e",
+              "name": "timeframe",
+              "value": "={{ $json.body.timeframe }}",
+              "type": "string"
+            },
+            {
+              "id": "6a4bec52-4849-429e-bac9-f627ec7afe0d",
+              "name": "ema_short",
+              "value": "={{ $json.body.ema_short }}",
+              "type": "string"
+            },
+            {
+              "id": "6d90cf5d-218c-4bf9-93dd-e55686b5d347",
+              "name": "ema_long",
+              "value": "={{ $json.body.rsi_period }}",
+              "type": "string"
+            },
+            {
+              "id": "48b0f668-86a4-4296-a3cd-3f9e510afbe6",
+              "name": "rsi",
+              "value": "={{ $json.body.rsi_period }}",
+              "type": "string"
+            },
+            {
+              "id": "ab5c0a55-4e55-493b-a5b1-4174d3b5372e",
+              "name": "data",
+              "value": "={{ $json.body.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1040,
+        580
+      ],
+      "id": "d93ed5af-d8d1-4716-828b-d14d616cdbe2",
+      "name": "Set Clean JSON"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c211b059-258c-4fb4-a60f-0dfcde277559",
+              "name": "data",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        180,
+        1120
+      ],
+      "id": "6b23babb-add5-4e5f-a98d-d307ec11cc39",
+      "name": "Set Clean output to json"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.data }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        1120
+      ],
+      "id": "e58a5dac-b0c1-405d-b9ce-7eb3e42a252b",
+      "name": "Send Message to Telegram",
+      "webhookId": "7b6e2c41-177d-4bb9-b36a-ba188a7f5acb",
+      "credentials": {
+        "telegramApi": {
+          "id": "FjHJlICPMhnqv21y",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "file": "={{ $json.url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        600,
+        1320
+      ],
+      "id": "eec2ea5e-279e-4c6b-8e8c-eb174d88182c",
+      "name": "Send image to Telegram",
+      "webhookId": "f7cc09c9-29c5-4c5a-b257-7ba50cb17109",
+      "credentials": {
+        "telegramApi": {
+          "id": "FjHJlICPMhnqv21y",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1bbaef34-d68d-485f-b2b2-ff1f6d22e635",
+              "name": "ticker",
+              "value": "={{ $('Set Clean JSON').item.json.symbol }}",
+              "type": "string"
+            },
+            {
+              "id": "c9fbfd33-ad91-4697-887b-bbb53189e3cb",
+              "name": "query1",
+              "value": "={{ $('Set Clean JSON').item.json.timeframe }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        180,
+        1320
+      ],
+      "id": "fd8fe164-0860-4abe-9793-3b67c3df80bf",
+      "name": "Set interval and symbol"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.chart-img.com/v2/tradingview/advanced-chart/storage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"theme\": \"dark\",\n  \"interval\": \"1m\",\n  \"symbol\": \"BINANCE:BTCUSDT\",\n  \"override\": {\n    \"showStudyLastValue\": false\n  },\n  \"studies\": [\n     {\n      \"name\": \"Relative Strength Index\"\n    },\n    {\n      \"name\": \"MACD\",\n      \"override\": {\n        \"Signal.linewidth\": 2,\n        \"Signal.color\": \"rgb(255,65,129)\"\n      }\n    },\n    {\n      \"name\": \"Moving Average Exponential\",\n      \"input\": {\n        \"length\": 9,\n        \"source\": \"close\",\n        \"offset\": 0,\n        \"smoothingLine\": \"SMA\",\n        \"smoothingLength\": 9\n      },\n      \"override\": {\n        \"Plot.linewidth\": 1,\n        \"Plot.plottype\": \"line\",\n        \"Plot.color\": \"rgb(33,150,243)\"\n      }\n    }\n    \n  ]\n} ",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        1320
+      ],
+      "id": "73ebc1db-250e-4562-bac3-eaa9adc7f7c9",
+      "name": "HTTP Request to chart-img.com"
+    },
+    {
+      "parameters": {
+        "content": "## 1. จุดเริ่มต้นของข้อมูล (Data Input)                                         \n# Webhook Node  \n\nรับข้อมูลจากระบบภายนอกผ่าน HTTP POST\nข้อมูลที่รับมาจะประกอบด้วย:\n\nSymbol (เช่น BTCUSDT)\nTimeframe (เช่น 1m)\nข้อมูล OHLC พร้อม indicators\nEMA, RSI, MACD values\n\n\n# Set Clean JSON Node\n\nทำความสะอาดและจัดระเบียบข้อมูลที่รับมา\nสร้าง session_id สำหรับการติดตาม\nแยกข้อมูลตามประเภท (symbol, timeframe, indicators)",
+        "height": 440,
+        "width": 780
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2180,
+        400
+      ],
+      "id": "13206d63-4d38-4d0d-ac9a-ca87475a1829",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\nคุณคือผู้เชี่ยวชาญการวิเคราะห์เชิงเทคนิคสำหรับการเทรดระยะสั้น (กรอบเวลา 1 นาที) ด้วย Price Action และ Indicator คุณจะได้รับข้อมูลแท่งเทียนย้อนหลังจำนวน 100 แท่งล่าสุด แต่ละแท่งมีข้อมูลดังนี้:\n{{ $json.session_id }}\n{{ $json.timeframe }}\n{{ $json.ema_short }}\n{{ $json.ema_long }}\n{{ $json.rsi }}\n{{ $json.data }}\n```\n- open_time: (เวลาของแท่ง)\n- open: (ราคาเปิด)\n- high: (ราคาสูงสุด)\n- low: (ราคาต่ำสุด)\n- close: (ราคาปิด)\n- ema_9: (EMA ระยะ 9)\n- ema_21: (EMA ระยะ 21)\n- rsi: (ค่า RSI)\n- macd: (ค่า MACD)\n- macd_signal: (ค่า Signal Line ของ MACD)\n- macd_hist: (ค่า Histogram ของ MACD)\n```\n\nให้คุณดำเนินการวิเคราะห์โดย:\n\n**1. วิเคราะห์แนวโน้มของตลาด**\n\n* พิจารณา EMA 9 และ EMA 21 ย้อนหลังว่ามีแนวโน้มขึ้น (Bullish), ลง (Bearish), หรือ Sideway ชัดเจนหรือไม่\n\n**2. วิเคราะห์ RSI**\n\n* ประเมินแนวโน้มของ RSI ย้อนหลัง (กลับตัวหรือ Divergence หรือสภาวะ Overbought/Oversold อย่างไร)\n\n**3. วิเคราะห์ MACD**\n\n* ประเมิน Histogram และการตัดกันของ MACD และ Signal Line ย้อนหลัง\n\n**4. วิเคราะห์ Price Action**\n\n* วิเคราะห์ลักษณะของแท่งเทียนย้อนหลังว่ามีรูปแบบ (Pattern) อะไรชัดเจนหรือไม่ (เช่น Double top, Hammer, Engulfing เป็นต้น)\n\nหลังจากนั้นให้สรุปการตัดสินใจตามเกณฑ์:\n\n**สัญญาณ Long (ซื้อ):**\n\n* แนวโน้ม EMA Bullish ชัดเจน ร่วมกับ RSI กลับตัวขึ้นหรือ MACD เป็นบวกชัดเจน และ Price Action สนับสนุนการขึ้น\n\n**สัญญาณ SELL (ขาย):**\n\n* แนวโน้ม EMA Bearish ชัดเจน ร่วมกับ RSI กลับตัวลงหรือ MACD เป็นลบชัดเจน และ Price Action สนับสนุนการลง\n\n**สัญญาณ Hold (ไม่เข้าเทรด):**\n\n* แนวโน้มไม่ชัดเจน หรือมีสัญญาณขัดแย้งกัน\n\n**ให้ตอบผลลัพธ์ในรูปแบบดังนี้:**\n\n```\nสรุปการวิเคราะห์ตลาด (แท่งล่าสุดเวลา: [open_time ล่าสุด]):\n\nแท่งล่าสุด OHLC:\n- Open: (ราคาเปิดแท่งล่าสุด)\n- High: (ราคาสูงสุดแท่งล่าสุด)\n- Low: (ราคาต่ำสุดแท่งล่าสุด)\n- Close: (ราคาปิดแท่งล่าสุด)\n\n- แนวโน้มตลาด (EMA): (อธิบายแนวโน้ม EMA โดยรวมจากข้อมูลย้อนหลัง)\n- RSI: (สรุปแนวโน้ม RSI)\n- MACD: (สรุปแนวโน้ม MACD)\n- Price Action: (สรุป Pattern สำคัญที่เห็นจากข้อมูลย้อนหลัง เช่น Sideways down , Sideways up,Sideways )\n\nสัญญาณที่แนะนำ: (LONG / SELL / HOLD)\n\nเหตุผลประกอบการตัดสินใจ:\n(สรุปสั้นๆ ชัดเจนเกี่ยวกับเหตุผลที่แนะนำ)\n```\n\n---\n\n\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -660,
+        580
+      ],
+      "id": "e4c58931-c9c4-429c-9426-8e56e6186ddf",
+      "name": "AI Analysis System"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -740,
+        760
+      ],
+      "id": "a0031c42-8e99-4e0c-8cc7-7fc7fde446f8",
+      "name": "GPT-4o-mini"
+    },
+    {
+      "parameters": {
+        "content": "## 2. ระบบวิเคราะห์ AI (AI Analysis System)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nใช้ GPT-4o-mini เป็น Language Model\nวิเคราะห์ข้อมูลตาม prompt ที่กำหนดไว้:\n\nวิเคราะห์แนวโน้ม EMA (9 และ 21)\nตรวจสอบ RSI levels และแนวโน้ม\nวิเคราะห์ MACD signals\nศึกษา Price Action patterns",
+        "height": 580,
+        "width": 480,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -780,
+        500
+      ],
+      "id": "f5e7d067-656d-4c95-b14d-bec9ee5b610a",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## 3. ระบบการส่งสัญญาณ (Signal Execution)\n\n# Code Node\nแปลงผลลัพธ์จาก AI เป็นสัญญาณ LONG/SELL/HOLD\nใช้ Regular Expression เพื่อหาคำสำคัญ\n\n# HTTP Requests\n\nHTTP Request to binance th: ส่งสัญญาณไปยัง Binance Thailand API\n\nพารามิเตอร์: ACTION, SYMBOL\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n                            ",
+        "height": 600,
+        "width": 920,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "855c3692-a0b3-4fb4-9d26-8176cc56d35c",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:5000/webhook/crypto/binance_th\n\n",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ACTION\": \"{{ $json.signal == 'LONG' ? 'OPEN LONG' : $json.signal == 'SELL' ? 'OPEN SHORT' : 'HOLD' }}\",\n  \"SYMBOL\": \"BTCUSDT\"\n  \n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        400
+      ],
+      "id": "4f835ecc-b504-4203-9dc7-735bce0b0177",
+      "name": "HTTP Request to binance th"
+    },
+    {
+      "parameters": {
+        "content": "## 4. ระบบแจ้งเตือน (Notification System)\n# Telegram Integration\nSend Message to Telegram: ส่งผลวิเคราะห์แบบข้อความ\nSend image to Telegram: ส่งชาร์ตจาก chart-img.com\nHTTP Request to chart-img.com: สร้างภาพชาร์ตพร้อม indicators\n\n\n\n\n\n\n# Chart Configuration\nTheme: Dark mode\nIndicators: RSI, MACD, EMA 9\nSymbol: BINANCE:BTCUSDT\nInterval: 1 minute",
+        "height": 860,
+        "width": 920,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        20,
+        660
+      ],
+      "id": "19b9fc52-4b27-4225-a0cb-f072fff6bcec",
+      "name": "Sticky Note5"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request to binance th",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Clean JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Clean JSON": {
+      "main": [
+        [
+          {
+            "node": "AI Analysis System",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Clean output to json": {
+      "main": [
+        [
+          {
+            "node": "Send Message to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set interval and symbol": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request to chart-img.com",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request to chart-img.com": {
+      "main": [
+        [
+          {
+            "node": "Send image to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analysis System": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set Clean output to json",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set interval and symbol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Analysis System",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c04b387b-0faf-4a36-a80c-9c0032cb4f9e",
+  "meta": {
+    "instanceId": "73f4d462547880624aa48941eaf68ece33c84fef63caddba7e196fd24d2050a8"
+  },
+  "id": "aVextaRUUh03b7nI",
+  "tags": []
+}
