@@ -1,4 +1,5 @@
-https://www.facebook.com/investicbkk/videos/702163495773496/
+# สนใจ course เรียน n8n No algo trading(n8n X ai agent)  code 
+### https://www.facebook.com/investicbkk/videos/702163495773496/
 -----
 <p align="center">
   <img src="test/test.gif"/>
